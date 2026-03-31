@@ -3,12 +3,12 @@ import { db } from "./firebase"; // Importing the db from your firebase.js
 import { collection, addDoc, onSnapshot, query, orderBy } from "firebase/firestore";
 
 function App() {
-  // 1. State for Input Form Fields
+  // 1. State for Input Form Fields (Requirement #83)
   const [name, setName] = useState("");
   const [course, setCourse] = useState("");
   const [yearLevel, setYearLevel] = useState("");
   
-  // 2. State for Displaying Records
+  // 2. State for Displaying Records (Requirement #85)
   const [students, setStudents] = useState([]);
 
   // 3. Save Data to Firestore (Requirement #84)
@@ -33,8 +33,9 @@ function App() {
     }
   };
 
-  // 4. Retrieve Data from Firestore (Requirement #85)
+  // 4. Retrieve Data from Firestore (Requirement #85 - Real-time)
   useEffect(() => {
+    // Orders students by creation time (newest on top)
     const q = query(collection(db, "students"), orderBy("createdAt", "desc"));
     const unsubscribe = onSnapshot(q, (snapshot) => {
       setStudents(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
@@ -42,55 +43,102 @@ function App() {
     return () => unsubscribe();
   }, []);
 
-  return (
-    <div style={{ padding: "40px", fontFamily: "Arial" }}>
-      <h2>TIP Student Record Form</h2>
+  // Define styling objects for better organization
+  const styles = {
+    container: {
+      padding: "40px",
+      maxWidth: "800px",
+      margin: "0 auto",
+      fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+    },
+    heading: {
+      textAlign: "center",
+      color: "#333",
+      marginBottom: "20px",
+    },
+    input: {
+      padding: "10px 15px",
+      marginRight: "10px",
+      border: "1px solid #ddd",
+      borderRadius: "4px",
+      width: "calc(33.33% - 14px)", // Adjusts for margin/padding
+      display: "inline-block",
+    },
+    button: {
+      display: "block",
+      margin: "20px auto",
+      padding: "10px 30px",
+      backgroundColor: "#28a745", // A modern green color
+      color: "white",
+      border: "none",
+      borderRadius: "4px",
+      cursor: "pointer",
+      fontSize: "16px",
+      fontWeight: "bold",
+    },
+    table: {
+      width: "100%",
+      borderCollapse: "collapse",
+      marginTop: "30px",
+      boxShadow: "0 2px 10px rgba(0, 0, 0, 0.1)",
+      borderRadius: "8px",
+      overflow: "hidden",
+    },
+    th: {
+      backgroundColor: "#333", // Dark modern header
+      color: "white",
+      padding: "12px",
+      textAlign: "left",
+    },
+    td: {
+      padding: "12px",
+      borderBottom: "1px solid #eee",
+      color: "#555",
+    },
+  };
 
-      {/* Requirement #83: Input Form */}
-      <form onSubmit={handleSave} style={{ marginBottom: "30px" }}>
-        <div style={{ marginBottom: "10px" }}>
-          <input type="text" placeholder="Name" value={name} 
-            onChange={(e) => setName(e.target.value)} style={{ padding: "8px", width: "250px" }} />
-        </div>
-        <div style={{ marginBottom: "10px" }}>
-          <input type="text" placeholder="Course" value={course} 
-            onChange={(e) => setCourse(e.target.value)} style={{ padding: "8px", width: "250px" }} />
-        </div>
-        <div style={{ marginBottom: "10px" }}>
-          <input type="number" placeholder="Year Level" value={yearLevel} 
-            onChange={(e) => setYearLevel(e.target.value)} style={{ padding: "8px", width: "250px" }} />
-        </div>
-        <button type="submit" style={{ padding: "10px 20px", cursor: "pointer", background: "#007bff", color: "#fff", border: "none" }}>
+  return (
+    <div style={styles.container}>
+      <h2 style={styles.heading}>TIP Student Record System</h2>
+
+      {/* Modernized Form Setup */}
+      <form onSubmit={handleSave} style={{ marginBottom: "30px", textAlign: "center" }}>
+        <input type="text" placeholder="Full Name" value={name} 
+          onChange={(e) => setName(e.target.value)} style={styles.input} />
+          
+        <input type="text" placeholder="Course" value={course} 
+          onChange={(e) => setCourse(e.target.value)} style={styles.input} />
+          
+        <input type="number" placeholder="Year Level" value={yearLevel} 
+          onChange={(e) => setYearLevel(e.target.value)} style={styles.input} />
+          
+        <button type="submit" style={styles.button}>
           Save Record
         </button>
       </form>
 
-      <hr />
-
-      {/* Requirement #85: Display Section */}
+      {/* Styled Table Section */}
       <h3>Saved Student Records</h3>
-      <div style={{ marginTop: "20px" }}>
-        {students.length === 0 ? <p>No records found.</p> : (
-          <table border="1" cellPadding="10" style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
-            <thead>
-              <tr style={{ background: "#f4f4f4" }}>
-                <th>Name</th>
-                <th>Course</th>
-                <th>Year Level</th>
+      {students.length === 0 ? <p>No records found.</p> : (
+        <table style={styles.table}>
+          <thead>
+            <tr>
+              <th style={styles.th}>Name</th>
+              <th style={styles.th}>Course</th>
+              <th style={styles.th}>Year Level</th>
+            </tr>
+          </thead>
+          <tbody>
+            {students.map((student) => (
+              <tr key={student.id} style={{ transition: "background-color 0.2s" }} onMouseOver={(e) => (e.currentTarget.style.backgroundColor = "#f9f9f9")} onMouseOut={(e) => (e.currentTarget.style.backgroundColor = "")}>
+                <td style={styles.td}>{student.name}</td>
+                <td style={styles.td}>{student.course}</td>
+                <td style={styles.td}>{student.yearLevel}</td>
               </tr>
-            </thead>
-            <tbody>
-              {students.map((student) => (
-                <tr key={student.id}>
-                  <td>{student.name}</td>
-                  <td>{student.course}</td>
-                  <td>{student.yearLevel}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
+            ))}
+          </tbody>
+        </table>
+      )}
     </div>
   );
 }
